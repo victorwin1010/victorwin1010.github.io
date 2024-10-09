@@ -682,4 +682,59 @@ function jsonOverride(
     smartJsonOverride(jProps, cValue, needle);
 }
 
- 
+/// set-json.js
+/// alias gson.js
+/// world ISOLATED
+function setJson(
+    jsonprop ,
+   cValue ,
+    needle 
+) {
+    console.log(jsonprop, "-", cValue, "-", needle)
+    var overrideObject = function(obj, propertyName, overrideValue) {
+        var overriden = false;
+        for (var key in obj)
+            if (obj.hasOwnProperty(key) && key === propertyName) {
+                obj[key] = overrideValue;
+                overriden = true
+            } else if (obj.hasOwnProperty(key) && typeof obj[key] === "object")
+            if (overrideObject(obj[key], propertyName, overrideValue)) overriden = true;
+        return overriden
+    };
+    var smartJSONParseOverride = function(propertyName, overrideValue, reStack = ".*") {
+        reStack = new RegExp(reStack, "g");
+        console.log(propertyName, "-", overrideValue, "-", reStack)
+        var realParse = JSON.parse;
+        JSON.parse = function(text, reviver) {
+            var obj = realParse(text, reviver);
+            if (!obj) return obj;
+            var stackTrace = (new Error).stack;
+            if (reStack.test(stackTrace))
+                if (overrideObject(obj, propertyName, overrideValue));
+            return obj
+        }
+    };
+    if (cValue === 'undefined') {
+        cValue = undefined;
+    } else if (cValue === 'false') {
+        cValue = false;
+    } else if (cValue === 'true') {
+        cValue = true;
+    } else if (cValue === 'null') {
+        cValue = null;
+    } else if (cValue === "''" || cValue === '') {
+        cValue = '';
+    } else if (cValue === '[]') {
+        cValue = [];
+    } else if (cValue === '{}') {
+        cValue = {};
+    } else {
+        Cvalue = Cvalue;
+    }
+    window.smartJSONParseOverride = smartJSONParseOverride;
+if(needle=== "''" || needle === '' || needle === '' || needle === null || needle === undefined){
+    smartJSONParseOverride(jsonprop, cValue);
+}else{
+ smartJSONParseOverride(jsonprop, cValue,needle );
+}
+}
