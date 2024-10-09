@@ -591,4 +591,95 @@ function globalEval(
     };
     runAt(()=>{ injectCode(); }, run);
 }
+
+/// json-override.js
+/// alias jsonride.js
+/// world ISOLATED
+// example.com##+js(jsonride, jProps, cValue,needle)
+function jsonOverride(
+    jProps = '',
+    cValue = '',
+    needle = '.*',
+){
+    if (jProps === "''" || jProps === '' || jProps === null || jProps === undefined){return;}
+    if (needle === "''" || needle === '' || needle === null || needle === undefined){needle='.*';}
+    function deepOverride(obj, pattern, newValue) {
+        if (typeof obj !== 'object' || obj === null) {
+            throw new Error("Invalid object: The first argument must be a non-null object.");
+        }
+        if (typeof pattern !== 'string') {
+            throw new Error("Invalid pattern: The second argument must be a string.");
+        }
+        const keys = pattern.split('.');
+        function recursiveOverride(currentObj, currentKeys, index) {
+            const key = currentKeys[index];
+            if (index === currentKeys.length - 1) {
+                if (Array.isArray(currentObj)) {
+                    currentObj.forEach(item => {
+                        if (typeof item === 'object' && item !== null) {
+                            item[key] = newValue;
+                        }
+                    });
+                } else if (typeof currentObj === 'object' && currentObj !== null) {
+                    currentObj[key] = newValue;
+                }
+                return;
+            }
+            if (key === '*') {
+                for (const k in currentObj) {
+                    if (currentObj.hasOwnProperty(k)) {
+                        recursiveOverride(currentObj[k], currentKeys, index + 1);
+                    }
+                }
+            } else if (key === '[]') {
+                if (Array.isArray(currentObj)) {
+                    currentObj.forEach(item => {
+                        recursiveOverride(item, currentKeys, index + 1);
+                    });
+                }
+            } else {
+                if (currentObj[key] !== undefined) {
+                    recursiveOverride(currentObj[key], currentKeys, index + 1);
+                }
+            }
+        }
+        recursiveOverride(obj, keys, 0);
+    }
+    var smartJsonOverride = function(propertyName, overrideValue, reStack = ".*") {
+        reStack = new RegExp(reStack, "g");
+        var realParse = JSON.parse;
+        JSON.parse = function(text, reviver) {
+            try {
+                var obj = realParse(text, reviver);
+                if (!obj) return obj;
+                var stackTrace = (new Error).stack;
+                if (reStack.test(stackTrace)) {
+                    deepOverride(obj, propertyName, overrideValue);
+                }
+                return obj;
+            } catch (error) {
+                console.error("Error parsing JSON:", error.message);
+                return null;
+            }
+        };
+    };
+    if (cValue === 'undefined') {
+        cValue = undefined;
+    } else if (cValue === 'false') {
+        cValue = false;
+    } else if (cValue === 'true') {
+        cValue = true;
+    } else if (cValue === 'null') {
+        cValue = null;
+    } else if (cValue === "''" || cValue === '') {
+        cValue = '';
+    } else if (cValue === '[]') {
+        cValue = [];
+    } else if (cValue === '{}') {
+        cValue = {};
+    }
+    window.smartJsonOverride = smartJsonOverride;
+    smartJsonOverride(jProps, cValue, needle);
+}
+
  
