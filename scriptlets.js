@@ -564,3 +564,31 @@ function setAttr(
 	};
 	runAt(( ) => { start(); }, /\bcomplete\b/.test(run) ? 'idle' : 'interactive');
 }
+
+/// global-eval.js
+/// alias goeval.js
+/// dependency run-at.fn
+/// world ISOLATED
+// example.com##+js(goeval, codetext, runValue)
+function globalEval(
+    text = '',
+    run= 'interactive'
+) {
+    if (text === '') { return; }
+    console.log('test');
+    const injectCode =()=>{
+        try {
+            const script = document.createElement('script');
+            script.textContent = text;
+            document.body.appendChild(script);
+            script.onload = function() {
+                document.body.removeChild(script);
+            };
+            if (!script.src) {
+                document.body.removeChild(script);
+            }
+        } catch(e) {console.log('goeval: ',e)}
+    };
+    runAt(()=>{ injectCode(); }, run);
+}
+ 
