@@ -762,5 +762,7 @@ function vikiVideoPlayer() {
             }
         });
     }
+    console.log("vikiplay inject start");
     runAt(() => { injectCode();}, 'interactive');
+    console.log("vikiplay inject end");
 }
