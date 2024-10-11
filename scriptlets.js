@@ -746,23 +746,26 @@ function uboDefineProperty(){
 
 /// viki-video-player.js
 /// alias vikiplay.js
-/// dependency run-at.fn
 /// dependency ubo-define-property.fn
 /// world ISOLATED
 function vikiVideoPlayer() {
     const viki_defineProperty = uboDefineProperty();
-    function injectCode() {
+    console.log("vikiplay inject start");
+    console.dir(viki_defineProperty);
+    try {
         viki_defineProperty('VikiMediaPlayer.create', {
             value: (elem, props) => {
                 try {
                     props['preset'] = 'vikipass';
                     props['queue'] = props['queue'].filter(keys => keys.type !== 'bumper');
                     return new VikiMediaPlayer(elem, props)
-                } catch (e) {}
+                } catch (e) {
+                    console.log("inner-vikiplay-Error: ", e)
+                }
             }
         });
+    } catch (e) {
+        console.log("outer-vikiplay-Error: ", e)
     }
-    console.log("vikiplay inject start");
-    runAt(() => { injectCode();}, 'interactive');
     console.log("vikiplay inject end");
 }
